@@ -17,12 +17,11 @@ class Category(BaseModel):
 class Hazard(BaseModel):
     __tablename__ = 'hazards'
 
-    # TODO: make backref to User table.
-    author_id = db.Column(db.Integer, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     time = db.Column(db.DateTime, nullable=False)
     x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
-    cat = db.Column(db.Integer, nullable=False)
+    cat = db.Column(db.Integer, db.ForeignKey('categories.id'))
     anonymous = db.Column(db.Integer, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
     info = db.Column(db.String(4000), nullable=False)
@@ -34,3 +33,4 @@ class User(BaseModel):
 
     name      = db.Column(db.String(250), nullable=False)
     clearance = db.Column(db.Integer, nullable=False)
+    hazards   = db.relationship('Hazard', backref='user')
