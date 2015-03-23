@@ -2,11 +2,15 @@ from json import dumps, loads
 from datetime import datetime
 from urlparse import urlparse
 
+from passlib.hash import pbkdf2_sha512
+
 from app import app, db
 from app.models import Category
 
 user_alex = {
     'name': 'Alex',
+    'username': 'alex',
+    'passhash': pbkdf2_sha512.encrypt('hello', salt_size=16, rounds=8000),
     'clearance': 0
 }
 
@@ -83,8 +87,9 @@ class TestApp(object):
         resp = self.app.get(path)
         data = loads(resp.data)
 
-        anticipated = {'id': 1, 'hazards': []}
+        anticipated = {'id': 1, 'hazards': [], 'token': None}
         anticipated.update(user_alex)
+
         assert data == anticipated
 
     def test_make_new_hazard(self):
@@ -95,8 +100,12 @@ class TestApp(object):
         resp = self.app.get(path)
         data = loads(resp.data)
 
-        anticipated = {'id': 1, 'user': {'id': 1, 'name': 'Alex', 'clearance': 0}}
+        user = {'id': 1, 'token': None}
+        user.update(user_alex)
+
+        anticipated = {'id': 1, 'user': user}
         anticipated.update(hazard_bag)
+
         assert data == anticipated
 
     def test_make_anon_hazard(self):
@@ -108,4 +117,5 @@ class TestApp(object):
 
         anticipated = {'id': 1, 'user': None}
         anticipated.update(hazard_bag)
+
         assert data == anticipated
