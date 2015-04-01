@@ -7,9 +7,18 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from models import db, User
 
+def process_new_user(data=None, **kw):
+    if 'password' not in data:
+        raise ProcessingException(description='No password.', code=400)
+
+    password = data['password']
+    data['passhash'] = pbkdf2_sha512.encrypt(password, salt_size=16, rounds=8000)
+    del data['password']
+
 def is_authorized(*args, **kwargs):
     if not all(x in request.args for x in ['token', 'user']):
-        raise ProcessingException(description='Bad request.', code=400)
+        assert 0
+        raise ProcessingException(description='No token or user id.', code=400)
 
     user_id = request.args['user']
     token = request.args['token']
@@ -25,23 +34,22 @@ def is_authorized(*args, **kwargs):
 
 def login():
     if not all(x in request.args for x in ['username', 'password']):
-        raise ProcessingException(description='Bad request.', code=400)
+        raise ProcessingException(description='No username or password.', code=400)
 
     username = request.args['username']
     password = request.args['password']
 
-    # get the password hash to test against the database
-    passhash = pbkdf2_sha512(password, salt_size=16, rounds=8000)
-
     # generate a token
-    token = uuid4()
+    token = uuid4().hex
 
     try:
         user = User.query.filter(User.username == username) \
-            .filter(User.passhash == passhash) \
             .one()
+
+        if not pbkdf2_sha512.verify(password, user.passhash):
+            raise ProcessingException(description='Bad authentication.', code=401)
     except NoResultFound:
-        raise ProcessingException(description='Bad authentication.', code=401)
+        raise ProcessingException(description='No user found.', code=400)
     except MultipleResultsFound:
         raise ProcessingException(description='Server state inconsistent.', code=500)
 

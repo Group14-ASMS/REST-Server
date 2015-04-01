@@ -2,15 +2,13 @@ from json import dumps, loads
 from datetime import datetime
 from urlparse import urlparse
 
-from passlib.hash import pbkdf2_sha512
-
 from app import app, db
-from app.models import Category
+from app.models import Category, User
 
 user_alex = {
     'name': 'Alex',
     'username': 'alex',
-    'passhash': pbkdf2_sha512.encrypt('hello', salt_size=16, rounds=8000),
+    'password': 'hello',
     'clearance': 0
 }
 
@@ -38,27 +36,34 @@ hazard_anon_bag = {
     'photo_id': 1
 }
 
-def make_category():
-    cat_baggage = Category(name='unattended baggage')
-
-def make_user(client, user_dict):
-    resp = client.post('/api/users',
+def post_json_notoken(client, path, data):
+    return client.post(path,
         content_type='application/json',
-        data=dumps(user_dict))
+        data=dumps(data))
 
-    return urlparse(resp.headers['Location']).path
 
-def make_hazard(client, hazard_dict):
-    resp = client.post('/api/hazards',
+def post_json(client, path, token, id, data):
+    return client.post(path,
         content_type='application/json',
-        data=dumps(hazard_dict))
+        query_string={'token': token, 'user': id},
+        data=dumps(data))
 
-    return urlparse(resp.headers['Location']).path
 
-def setup_module(module):
-    module.app.config['TESTING'] = True
+def get_params(client, path, params):
+    return client.get(path,
+        query_string=params)
 
-class TestApp(object):
+
+class TestLoggedIn(object):
+    def make_user(self, user):
+        return post_json_notoken(self.app, '/api/users', user)
+
+    def make_hazard(self, token, id, hazard):
+        return post_json(self.app, '/api/hazards', token, id, hazard)
+
+    def login(self, creds):
+        return get_params(self.app, '/api/login', {'username': 'alex', 'password': 'hello'})
+
     def setup(self):
         self.app = app.test_client()
 
@@ -68,54 +73,30 @@ class TestApp(object):
     def teardown_method(self, method):
         db.drop_all()
 
-    def test_get_many_empty(self):
-        resp = self.app.get('/api/users')
-        data = loads(resp.data)
-        assert data == {
-            'num_results': 0,
-            'objects': [],
-            'page': 1,
-            'total_pages': 0
-        }
+    def test_make_user(self):
+        # create new user
+        resp = self.make_user(user_alex)
 
-    def test_make_new_cat(self):
-        make_category()
+        assert resp.status == '201 CREATED'
+        assert loads(resp.data)['id'] == 1
 
-    def test_make_new_user(self):
-        path = make_user(self.app, user_alex)
+    def test_login(self):
+        self.make_user(user_alex)
 
-        resp = self.app.get(path)
-        data = loads(resp.data)
+        # login
+        resp = self.login({'username': 'alex', 'password': 'hello'})
 
-        anticipated = {'id': 1, 'hazards': [], 'token': None}
-        anticipated.update(user_alex)
+        assert resp.status == '200 OK'
+        assert loads(resp.data)['id'] == 1
 
-        assert data == anticipated
+    def test_make_hazard(self):
+        self.make_user(user_alex)
+        token = loads(self.login(user_alex).data)['token']
 
-    def test_make_new_hazard(self):
-        make_category()
-        make_user(self.app, user_alex)
-        path = make_hazard(self.app, hazard_bag)
+        # create new hazard
+        resp = self.make_hazard(token, 1, hazard_bag)
 
-        resp = self.app.get(path)
-        data = loads(resp.data)
+        assert resp.status == '201 CREATED'
+        assert loads(resp.data)['id'] == 1
 
-        user = {'id': 1, 'token': None}
-        user.update(user_alex)
-
-        anticipated = {'id': 1, 'user': user}
-        anticipated.update(hazard_bag)
-
-        assert data == anticipated
-
-    def test_make_anon_hazard(self):
-        make_category()
-        path = make_hazard(self.app, hazard_bag)
-
-        resp = self.app.get(path)
-        data = loads(resp.data)
-
-        anticipated = {'id': 1, 'user': None}
-        anticipated.update(hazard_bag)
-
-        assert data == anticipated
+    

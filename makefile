@@ -4,7 +4,7 @@ debug:
 	python run.py
 
 test:
-	py.test -vv test.py
+	py.test -s test.py
 
 .PHONY: clean
 clean:
