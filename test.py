@@ -12,6 +12,13 @@ user_alex = {
     'clearance': 0
 }
 
+user_lucas = {
+    'name': 'Lucas',
+    'username': 'lucas',
+    'password': 'world',
+    'clearance': 0
+}
+
 hazard_bag = {
     'author_id': 1,
     'time': datetime.utcnow().isoformat(),
@@ -36,34 +43,38 @@ hazard_anon_bag = {
     'photo_id': 1
 }
 
+
 def post_json_notoken(client, path, data):
     return client.post(path,
-        content_type='application/json',
-        data=dumps(data))
+                       content_type='application/json',
+                       data=dumps(data))
 
 
-def post_json(client, path, token, id, data):
+def post_json(client, path, token, data):
     return client.post(path,
-        content_type='application/json',
-        query_string={'token': token, 'user': id},
-        data=dumps(data))
+                       content_type='application/json',
+                       query_string={'token': token},
+                       data=dumps(data))
 
 
 def get_params(client, path, params):
     return client.get(path,
-        query_string=params)
+                      query_string=params)
+
+
+def make_user(client, user):
+    return post_json_notoken(client, '/api/users', user)
+
+
+def make_hazard(client, token, hazard):
+    return post_json(client, '/api/hazards', token, hazard)
+
+
+def login(client, creds):
+    return get_params(client, '/api/login', creds)
 
 
 class TestLoggedIn(object):
-    def make_user(self, user):
-        return post_json_notoken(self.app, '/api/users', user)
-
-    def make_hazard(self, token, id, hazard):
-        return post_json(self.app, '/api/hazards', token, id, hazard)
-
-    def login(self, creds):
-        return get_params(self.app, '/api/login', {'username': 'alex', 'password': 'hello'})
-
     def setup(self):
         self.app = app.test_client()
 
@@ -75,28 +86,53 @@ class TestLoggedIn(object):
 
     def test_make_user(self):
         # create new user
-        resp = self.make_user(user_alex)
+        resp = make_user(self.app, user_alex)
 
         assert resp.status == '201 CREATED'
         assert loads(resp.data)['id'] == 1
 
     def test_login(self):
-        self.make_user(user_alex)
+        make_user(self.app, user_alex)
 
         # login
-        resp = self.login({'username': 'alex', 'password': 'hello'})
+        resp = login(self.app, {'username': 'alex', 'password': 'hello'})
 
         assert resp.status == '200 OK'
         assert loads(resp.data)['id'] == 1
 
     def test_make_hazard(self):
-        self.make_user(user_alex)
-        token = loads(self.login(user_alex).data)['token']
+        make_user(self.app, user_alex)
+        resp = login(self.app, {'username': 'alex', 'password': 'hello'})
+        token = loads(resp.data)['token']
 
         # create new hazard
-        resp = self.make_hazard(token, 1, hazard_bag)
+        resp = make_hazard(self.app, token, hazard_bag)
 
         assert resp.status == '201 CREATED'
         assert loads(resp.data)['id'] == 1
 
-    
+
+class TestRejections(object):
+    def setup(self):
+        self.app = app.test_client()
+
+    def setup_method(self, method):
+        db.create_all()
+
+    def teardown_method(self, method):
+        db.drop_all()
+
+    def test_no_get_many(self):
+        make_user(self.app, user_alex)
+        make_user(self.app, user_lucas)
+        resp = login(self.app, {'username': 'alex', 'password': 'hello'})
+        token = loads(resp.data)['token']
+
+        resp = get_params(self.app, '/api/users', {'token': token})
+
+        assert resp.status == '405 METHOD NOT ALLOWED'
+
+    def test_no_respond_no_token(self):
+        # user route tests
+        assert get_params(self.app, '/api/users/1', {}).status == '400 BAD REQUEST'
+        assert post_json_notoken(self.app, '/api/users', {}).status == '400 BAD REQUEST'

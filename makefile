@@ -8,5 +8,5 @@ test:
 
 .PHONY: clean
 clean:
-	-@rm app.db
+	-@rm app/app.db
 	-@find . -name '*.pyc' -exec rm {} \;

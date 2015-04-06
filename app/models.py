@@ -2,6 +2,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class BaseModel(db.Model):
     __abstract__ = True
 
@@ -31,9 +32,9 @@ class Hazard(BaseModel):
 class User(BaseModel):
     __tablename__ = 'users'
 
-    name      = db.Column(db.String(250), nullable=False)
-    username  = db.Column(db.String(32), nullable=False)
-    passhash  = db.Column(db.String(129), nullable=False)
+    name = db.Column(db.String(250), nullable=False)
+    username = db.Column(db.String(32), nullable=False)
+    passhash = db.Column(db.String(129), nullable=False)
     clearance = db.Column(db.Integer, nullable=False)
-    token     = db.Column(db.String(32))
-    hazards   = db.relationship('Hazard', backref='user')
+    token = db.Column(db.String(32))
+    hazards = db.relationship('Hazard', backref='user')

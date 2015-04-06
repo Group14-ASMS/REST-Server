@@ -3,8 +3,9 @@ from os import environ
 from flask import Flask
 from flask.ext.restless import APIManager
 
-from auth import process_new_user, is_authorized, login
+from auth import process_new_user, disallowed, is_authorized, login
 from models import db
+from preprocessors import *
 
 app = Flask(__name__)
 
@@ -26,16 +27,20 @@ app.add_url_rule('/api/login', 'login', login)
 
 manager = APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(models.User,
-    methods=['GET', 'POST'],
-    preprocessors={
-        'GET_SINGLE': [is_authorized],
-        'GET_MANY': [is_authorized],
-        'POST': [process_new_user]
-    })
+                   methods=['GET', 'POST'],
+                   preprocessors={
+                       'GET_SINGLE': [is_authorized],
+                       'GET_MANY': [disallowed('Method not allowed.')],
+                       'POST': [process_new_user]
+                   },
+                   postprocessors={
+                       'GET_SINGLE': [postprocess_get_user],
+                       'POST': [postprocess_make_user]
+                   })
 manager.create_api(models.Hazard,
-    methods=['GET', 'POST'],
-    preprocessors={
-        'GET_SINGLE': [is_authorized],
-        'GET_MANY': [is_authorized],
-        'POST': [is_authorized]
-    })
+                   methods=['GET', 'POST'],
+                   preprocessors={
+                       'GET_SINGLE': [is_authorized],
+                       'GET_MANY': [is_authorized],
+                       'POST': [is_authorized, preprocess_hazard]
+                   })
