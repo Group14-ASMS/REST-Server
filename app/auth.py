@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from flask import request, jsonify, g
 from flask.ext.restless import ProcessingException
-from passlib.hash import pbkdf2_sha512
+from passlib.hash import bcrypt
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from models import db, User
@@ -13,9 +13,9 @@ def process_new_user(data=None, **kw):
         raise ProcessingException(description='No password.', code=400)
 
     password = data['password']
-    data['passhash'] = pbkdf2_sha512.encrypt(password,
-                                             salt_size=16,
-                                             rounds=8000)
+    data['passhash'] = bcrypt.encrypt(password,
+                                      rounds=12,
+                                      ident='2y')
     del data['password']
 
 
@@ -58,7 +58,7 @@ def login():
     try:
         user = User.query.filter(User.username == username).one()
 
-        if not pbkdf2_sha512.verify(password, user.passhash):
+        if not bcrypt.verify(password, user.passhash):
             raise ProcessingException(description='Bad authentication.',
                                       code=401)
     except NoResultFound:
