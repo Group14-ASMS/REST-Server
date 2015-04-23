@@ -25,8 +25,9 @@ class Hazard(BaseModel):
     cat = db.Column(db.Integer, db.ForeignKey('categories.id'))
     anonymous = db.Column(db.Integer, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
+    title = db.Column(db.String(60), nullable=False)
     info = db.Column(db.String(4000), nullable=False)
-    photo_id = db.Column(db.Integer, nullable=False)
+    photo_id = db.Column(db.String(20), nullable=False)
 
 
 class User(BaseModel):
@@ -34,7 +35,8 @@ class User(BaseModel):
 
     name = db.Column(db.String(250), nullable=False)
     username = db.Column(db.String(32), nullable=False)
-    passhash = db.Column(db.String(129), nullable=False)
     clearance = db.Column(db.Integer, nullable=False)
+    hashed_password = db.Column(db.String(128), nullable=False)
     token = db.Column(db.String(32))
     hazards = db.relationship('Hazard', backref='user')
+

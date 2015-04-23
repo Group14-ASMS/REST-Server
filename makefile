@@ -9,4 +9,5 @@ test:
 .PHONY: clean
 clean:
 	-@rm app/app.db
+	-@rm -rf __pycache__
 	-@find . -name '*.pyc' -exec rm {} \;

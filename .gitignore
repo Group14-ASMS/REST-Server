@@ -114,3 +114,6 @@ target/
 # sqlite stuff
 *.db
 
+# configuration
+prod.cfg
+

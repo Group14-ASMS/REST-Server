@@ -13,7 +13,7 @@ def process_new_user(data=None, **kw):
         raise ProcessingException(description='No password.', code=400)
 
     password = data['password']
-    data['passhash'] = bcrypt.encrypt(password,
+    data['hashed_password'] = bcrypt.encrypt(password,
                                       rounds=12,
                                       ident='2y')
     del data['password']
@@ -58,7 +58,7 @@ def login():
     try:
         user = User.query.filter(User.username == username).one()
 
-        if not bcrypt.verify(password, user.passhash):
+        if not bcrypt.verify(password, user.hashed_password):
             raise ProcessingException(description='Bad authentication.',
                                       code=401)
     except NoResultFound:

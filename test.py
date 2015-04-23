@@ -3,7 +3,7 @@ from datetime import datetime
 from urlparse import urlparse
 
 from app import app, db
-from app.models import Category, User
+from app.models import Category
 
 user_alex = {
     'name': 'Alex',
@@ -27,8 +27,9 @@ hazard_bag = {
     'cat': 1,
     'anonymous': 0,
     'priority': 1,
+    'title': 'oh no!',
     'info': 'blah',
-    'photo_id': 1
+    'photo_id': 'aebcafe'
 }
 
 hazard_anon_bag = {
@@ -39,8 +40,9 @@ hazard_anon_bag = {
     'cat': 1,
     'anonymous': 1,
     'priority': 1,
+    'title': 'spam eggs',
     'info': 'foo bar',
-    'photo_id': 1
+    'photo_id': 'a12345'
 }
 
 
@@ -80,6 +82,10 @@ class TestLoggedIn(object):
 
     def setup_method(self, method):
         db.create_all()
+
+        cat = Category(name='test')
+        db.session.add(cat)
+        db.session.commit()
 
     def teardown_method(self, method):
         db.drop_all()
