@@ -3,6 +3,9 @@ all: debug
 debug:
 	python run.py
 
+rebuild-test:
+	python rebuild-test.py
+
 test:
 	py.test -vv test.py
 
