@@ -6,6 +6,7 @@ from flask.ext.restless import APIManager
 from auth import process_new_user, disallowed, is_authorized, login
 from models import db
 from preprocessors import *
+from upload_photo import upload_photo
 
 app = Flask(__name__)
 
@@ -24,6 +25,7 @@ if app.config['DEBUG']:
 
 # routes
 app.add_url_rule('/api/login', 'login', login)
+app.add_url_rule('/api/hazards/<int:hazard_id>/photo', 'upload_photo', upload_photo, methods=['POST'])
 
 manager = APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(models.User,

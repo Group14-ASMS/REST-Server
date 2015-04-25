@@ -1,3 +1,5 @@
+import os
+
 from json import loads
 
 from flask import g
@@ -23,3 +25,10 @@ def preprocess_hazard(data=None, **kwargs):
         data['author_id'] = 0
     else:
         data['author_id'] = g.user.id
+
+    data.pop('photo_id', None)
+
+
+def postprocess_hazard(result=None, **kw):
+    result = {'id': result['id']}
+
