@@ -1,7 +1,9 @@
+from functools import wraps
 from uuid import uuid4
 
 from flask import request, jsonify, g
 from flask.ext.restless import ProcessingException
+
 from passlib.hash import bcrypt
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
@@ -14,8 +16,8 @@ def process_new_user(data=None, **kw):
 
     password = data['password']
     data['hashed_password'] = bcrypt.encrypt(password,
-                                      rounds=12,
-                                      ident='2y')
+                                             rounds=12,
+                                             ident='2y')
     del data['password']
 
 
@@ -42,6 +44,15 @@ def is_authorized(*args, **kwargs):
 
     # log this user in for the remainder of the request
     g.user = user
+
+
+def authorized(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        is_authorized()
+        return f(*args, **kwargs)
+
+    return wrapper
 
 
 def login():

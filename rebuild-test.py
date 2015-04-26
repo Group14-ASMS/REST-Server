@@ -13,4 +13,3 @@ db.session.add(cat)
 db.session.commit()
 
 print "Done!"
-

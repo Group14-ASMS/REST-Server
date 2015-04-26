@@ -6,6 +6,7 @@ from flask.ext.restless import ProcessingException
 
 from models import User
 
+
 def postprocess_get_user(result=None, **kw):
     if result['id'] != g.user.id:
         raise ProcessingException(description='Cannot query other users.',

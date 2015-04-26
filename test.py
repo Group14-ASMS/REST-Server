@@ -75,6 +75,7 @@ def make_hazard(client, token, hazard):
 
 def submit_photo(client, token, hazard_id, fileobj):
     return client.post('api/hazards/{}/photo'.format(hazard_id),
+                       query_string={'token': token},
                        data={'photo': fileobj})
 
 
@@ -126,8 +127,7 @@ class TestSimple(object):
 
         hazard = Hazard.query.filter(Hazard.id == 1).one()
 
-        assert hazard.photo_id == None
-
+        assert hazard.photo_id is None
 
     def test_make_anon_hazard(self):
         make_user(self.app, user_alex)
@@ -142,18 +142,25 @@ class TestSimple(object):
 
         hazard = Hazard.query.filter(Hazard.id == 1).one()
 
-        assert hazard.photo_id == None
-
+        assert hazard.photo_id is None
 
     def test_make_hazard_with_photo(self):
         make_user(self.app, user_alex)
         resp = login(self.app, {'username': 'alex', 'password': 'hello'})
         token = loads(resp.data)['token']
-        make_hazard(self.app, token, hazard_anon_bag)
+        make_hazard(self.app, token, hazard_bag)
 
-        resp = submit_photo(self.app, token, 1, (StringIO('hello'), 'example.jpg'))
+        resp = submit_photo(self.app,
+                            token,
+                            1,
+                            (StringIO('hello'), 'example.jpg'))
 
         assert resp.status == '204 NO CONTENT'
+
+        hazard = Hazard.query.filter(Hazard.id == 1).one()
+
+        assert hazard.photo_id is not None
+        assert len(hazard.photo_id) == 43
 
 
 class TestRejections(object):

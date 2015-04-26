@@ -25,7 +25,10 @@ if app.config['DEBUG']:
 
 # routes
 app.add_url_rule('/api/login', 'login', login)
-app.add_url_rule('/api/hazards/<int:hazard_id>/photo', 'upload_photo', upload_photo, methods=['POST'])
+app.add_url_rule('/api/hazards/<int:hazard_id>/photo',
+                 'upload_photo',
+                 upload_photo,
+                 methods=['POST'])
 
 manager = APIManager(app, flask_sqlalchemy_db=db)
 manager.create_api(models.User,

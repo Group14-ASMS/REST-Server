@@ -32,10 +32,10 @@ class Hazard(BaseModel):
 class User(BaseModel):
     __tablename__ = 'users'
 
-    name = db.Column(db.String(250), nullable=False)
+    name = db.Column(db.String(250), nullable=False, unique=True)
     username = db.Column(db.String(32), nullable=False)
     clearance = db.Column(db.Integer, nullable=False)
     hashed_password = db.Column(db.String(128), nullable=False)
     token = db.Column(db.String(32))
-    hazards = db.relationship('Hazard', backref='user')
-
+    hazards = db.relationship('Hazard',
+                              backref=db.backref('user', lazy='joined'))
