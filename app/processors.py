@@ -31,4 +31,3 @@ def preprocess_hazard(data=None, **kwargs):
 
 def postprocess_hazard(result=None, **kw):
     result = {'id': result['id']}
-

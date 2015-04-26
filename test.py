@@ -1,9 +1,10 @@
 from json import dumps, loads
 from datetime import datetime
+from StringIO import StringIO
 from urlparse import urlparse
 
 from app import app, db
-from app.models import Category
+from app.models import Category, Hazard
 
 user_alex = {
     'name': 'Alex',
@@ -72,6 +73,11 @@ def make_hazard(client, token, hazard):
     return post_json(client, '/api/hazards', token, hazard)
 
 
+def submit_photo(client, token, hazard_id, fileobj):
+    return client.post('api/hazards/{}/photo'.format(hazard_id),
+                       data={'photo': fileobj})
+
+
 def login(client, creds):
     return get_params(client, '/api/login', creds)
 
@@ -116,6 +122,37 @@ class TestLoggedIn(object):
 
         assert resp.status == '201 CREATED'
         assert loads(resp.data)['id'] == 1
+
+        hazard = Hazard.query.filter(Hazard.id == 1).one()
+
+        assert hazard.photo_id == None
+
+
+    def test_make_anon_hazard(self):
+        make_user(self.app, user_alex)
+        resp = login(self.app, {'username': 'alex', 'password': 'hello'})
+        token = loads(resp.data)['token']
+
+        # create new anonymous hazard
+        resp = make_hazard(self.app, token, hazard_anon_bag)
+
+        assert resp.status == '201 CREATED'
+        assert loads(resp.data)['id'] == 1
+
+        hazard = Hazard.query.filter(Hazard.id == 1).one()
+
+        assert hazard.photo_id == None
+
+
+    def test_make_hazard_with_photo(self):
+        make_user(self.app, user_alex)
+        resp = login(self.app, {'username': 'alex', 'password': 'hello'})
+        token = loads(resp.data)['token']
+        make_hazard(self.app, token, hazard_anon_bag)
+
+        resp = submit_photo(self.app, token, 1, (StringIO('hello'), 'example.jpg'))
+
+        assert resp.status == '204 NO CONTENT'
 
 
 class TestRejections(object):

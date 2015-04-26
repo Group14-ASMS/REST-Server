@@ -5,7 +5,7 @@ from flask.ext.restless import APIManager
 
 from auth import process_new_user, disallowed, is_authorized, login
 from models import db
-from preprocessors import *
+from processors import *
 from upload_photo import upload_photo
 
 app = Flask(__name__)
