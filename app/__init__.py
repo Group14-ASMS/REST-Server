@@ -33,7 +33,7 @@ manager.create_api(models.User,
                    preprocessors={
                        'GET_SINGLE': [is_authorized],
                        'GET_MANY': [disallowed('Method not allowed.')],
-                       'POST': [process_new_user]
+                       'POST': [process_new_user, preprocess_make_user]
                    },
                    postprocessors={
                        'GET_SINGLE': [postprocess_get_user],

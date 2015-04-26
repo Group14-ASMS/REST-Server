@@ -82,7 +82,7 @@ def login(client, creds):
     return get_params(client, '/api/login', creds)
 
 
-class TestLoggedIn(object):
+class TestSimple(object):
     def setup(self):
         self.app = app.test_client()
 
@@ -94,6 +94,7 @@ class TestLoggedIn(object):
         db.session.commit()
 
     def teardown_method(self, method):
+        db.session.close()
         db.drop_all()
 
     def test_make_user(self):
@@ -179,3 +180,11 @@ class TestRejections(object):
         # user route tests
         assert get_params(self.app, '/api/users/1', {}).status == '400 BAD REQUEST'
         assert post_json_notoken(self.app, '/api/users', {}).status == '400 BAD REQUEST'
+
+    def test_make_non_unique_user(self):
+        make_user(self.app, user_alex)
+
+        # make the user with the same name
+        resp = make_user(self.app, user_alex)
+
+        assert resp.status == '400 BAD REQUEST'

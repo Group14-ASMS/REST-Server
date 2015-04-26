@@ -18,12 +18,11 @@ class Category(BaseModel):
 class Hazard(BaseModel):
     __tablename__ = 'hazards'
 
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     time = db.Column(db.DateTime, nullable=False)
     x = db.Column(db.Float, nullable=False)
     y = db.Column(db.Float, nullable=False)
     cat = db.Column(db.Integer, db.ForeignKey('categories.id'))
-    anonymous = db.Column(db.Boolean, nullable=False)
     priority = db.Column(db.Integer, nullable=False)
     title = db.Column(db.String(60), nullable=False)
     info = db.Column(db.String(4000), nullable=False)
