@@ -6,9 +6,11 @@ from flask.ext.restless import APIManager
 from auth import process_new_user, disallowed, is_authorized, login
 from models import db
 from processors import *
-from upload_photo import upload_photo
 
 app = Flask(__name__)
+
+from upload_photo import upload_photo
+
 
 # conditional configuration
 if 'ASMS_CONFIG' in environ:

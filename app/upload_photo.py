@@ -4,9 +4,24 @@ from flask import request, g
 from flask.ext.restless import ProcessingException
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
 
 from auth import authorized
 from models import db, Hazard
+from . import app
+
+
+def s3_upload(name, fileobj):
+    conn = S3Connection(app.config['AWS_ACCESS_ID'],
+                        app.config['AWS_SECRET_KEY'],
+                        host='s3-us-west-2.amazonaws.com')
+
+    bucket = conn.get_bucket(app.config['AWS_S3_BUCKET'])
+
+    key = Key(bucket)
+    key.key = name
+    key.set_contents_from_file(fileobj)
 
 
 @authorized
@@ -37,5 +52,8 @@ def upload_photo(hazard_id):
 
     hazard.photo_id = hid + rand
     db.session.commit()
+
+    name = hazard.photo_id + '.jpg'
+    s3_upload(name, request.files['photo'])
 
     return '', 204

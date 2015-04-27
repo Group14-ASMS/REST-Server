@@ -1,6 +1,5 @@
 from json import dumps, loads
 from datetime import datetime
-from StringIO import StringIO
 from urlparse import urlparse
 
 from app import app, db
@@ -150,10 +149,11 @@ class TestSimple(object):
         token = loads(resp.data)['token']
         make_hazard(self.app, token, hazard_bag)
 
-        resp = submit_photo(self.app,
-                            token,
-                            1,
-                            (StringIO('hello'), 'example.jpg'))
+        with open('s3conn/testimage.jpg') as f:
+            resp = submit_photo(self.app,
+                                token,
+                                1,
+                                (f, 'example.jpg'))
 
         assert resp.status == '204 NO CONTENT'
 
