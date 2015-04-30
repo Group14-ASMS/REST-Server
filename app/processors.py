@@ -33,8 +33,10 @@ def preprocess_hazard(data=None, **kw):
     # associate it with the authenticated user.
     if 'anonymous' not in data or data['anonymous'] == 1:
         data.pop('author_id', None)
+        data['anonymous'] = 1
     else:
         data['author_id'] = g.user.id
+        data['anonymous'] = 0
 
     data.pop('anonymous', None)
     data.pop('photo_id', None)
