@@ -13,6 +13,7 @@ class Category(BaseModel):
     __tablename__ = 'categories'
 
     name = db.Column(db.String(50), nullable=False)
+    hazards = db.relationship('Hazard', backref='category')
 
 
 class Hazard(BaseModel):
@@ -27,7 +28,7 @@ class Hazard(BaseModel):
     title = db.Column(db.String(60), nullable=False)
     info = db.Column(db.String(4000), nullable=False)
     photo_id = db.Column(db.String(43), nullable=True)
-
+    archived = db.Column(db.Boolean, nullable=False, default=False)
 
 class User(BaseModel):
     __tablename__ = 'users'
