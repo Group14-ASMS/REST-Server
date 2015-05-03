@@ -38,7 +38,6 @@ def preprocess_hazard(data=None, **kw):
         data['author_id'] = g.user.id
         data['anonymous'] = 0
 
-    data.pop('anonymous', None)
     data.pop('photo_id', None)
 
 
