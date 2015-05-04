@@ -1,7 +1,7 @@
 all: debug
 
 debug:
-	python run.py
+	python application.py
 
 rebuild-test:
 	python rebuild-test.py
